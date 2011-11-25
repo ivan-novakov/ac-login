@@ -1,0 +1,22 @@
+v0.3.0 (2011-06-02)
+
+  - option to use one time passwords when logging to Adobe Connect server
+  - option to refresh user data (first name, surname, email) on every login
+  - option to create user accounts on the Adobe Connect server, if they don't exist (it was hard-coded in the previous version)
+  - improved logging
+  - Zend Framework v1.11.6
+
+
+v0.2.0 (2009-04-01)
+
+  - option to add newly created users to a default group (must exist at the server)
+  - option to pass a 'target' GET variable with a specific URL users should be redirected to after login
+
+
+v0.1.0 (2009-03-10)
+
+  - initial version
+  - basic functionality
+  - supports Shibboleth authentication only
+  - supports Adobe Connect 6+
+  - requires PHP 5.2+, Zend Framework 1.5+ and AC PHP API
