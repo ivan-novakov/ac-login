@@ -58,6 +58,8 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected $_passwordSalt = NULL;
 
+    protected $_configFileName = 'aclogin.ini';
+
 
     /**
      * Constructor.
@@ -158,7 +160,7 @@ class AcLogin_Application extends AcLogin_Base
             // Create the user on the AC server
             $principalId = $this->_principalCreate($remoteUser);
             
-        // Refresh user data at the Adobe Connect server
+            // Refresh user data at the Adobe Connect server
         } elseif ($this->_config->account->refresh_user_data_on_login) {
             $this->_log->info(sprintf("[%s] User data refresh on login enabled, updating user data", $uid));
             $this->_principalUpdate($remoteUser, $principalId);
@@ -196,12 +198,19 @@ class AcLogin_Application extends AcLogin_Base
             $this->_actionGeneralError('No session found');
         }
         
+        if ($this->_isDebugMode()) {
+            $this->_actionDebugPage(array(
+                'user' => $remoteUser, 
+                'session' => $sessionString
+            ));
+            return;
+        }
+        
         // Pass the session string and redirect him to the appropriate URL
         $this->_log->info(sprintf("[%s] Redirecting user...", $uid));
         $this->_redirectUser($sessionString);
     }
-
-
+    
     /*
      * Adobe Connect routines
      */
@@ -375,8 +384,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param integer $principalId
      * @param string $newPassword
      */
-    protected function _principalUpdatePassword (AcLogin_RemoteUser $remoteUser, $principalId, 
-        $newPassword = NULL)
+    protected function _principalUpdatePassword (AcLogin_RemoteUser $remoteUser, $principalId, $newPassword = NULL)
     {
         
         $uid = $remoteUser->getUid();
@@ -424,8 +432,7 @@ class AcLogin_Application extends AcLogin_Base
         header('Location: ' . $uri);
         exit();
     }
-
-
+    
     /*
      * Initializations
      *
@@ -437,7 +444,9 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected function _initConfig ()
     {
-        $configFile = $this->getOption('config_file');
+        $configFile = $this->_getConfigFilePath();
+        //_log('CONFIG: ' . $configFile);
+        //$configFile = $this->getOption('config_file');
         if (! $configFile) {
             throw new AcLogin_Exception('No config file specified');
         }
@@ -495,13 +504,22 @@ class AcLogin_Application extends AcLogin_Base
         
         return $layout;
     }
-
-
+    
     /*
      * Miscelaneous actions/error handling.
      *
      */
     
+    protected function _actionDebugPage (Array $params = array())
+    {
+        $this->_log->info(print_r($_SERVER, true));
+        _log($_SERVER);
+        _log($params);
+        
+        $this->_actionGeneralError('Debug mode');
+    }
+
+
     /**
      * Shows error 'invalid user'.
      *
@@ -544,8 +562,9 @@ class AcLogin_Application extends AcLogin_Base
         ));
         
         $view->headTitle('Error');
-        $view->headLink()->appendStylesheet('aclogin.css');
+        //$view->headLink()->appendStylesheet('aclogin.css');
         
+
         $this->_renderView($view);
         exit();
     }
@@ -561,6 +580,17 @@ class AcLogin_Application extends AcLogin_Base
         $layout = $this->_initLayout();
         $layout->setView($view);
         echo $layout->render();
+    }
+
+
+    /**
+     * Returns true, if the debug mode is set.
+     * 
+     * @return boolean
+     */
+    protected function _isDebugMode ()
+    {
+        return $this->_config->general->get('debug_mode', false);
     }
 
 
@@ -620,5 +650,82 @@ class AcLogin_Application extends AcLogin_Base
     protected function _getLayoutPath ()
     {
         return ACLOGIN_TPL_DIR . $this->_config->general->get('template', 'default') . DIRECTORY_SEPARATOR . 'layouts';
+    }
+
+
+    /**
+     * Tries to determine the AC Login instance, if it is set.
+     * 
+     * @return string
+     */
+    protected function _getInstanceName ()
+    {
+        
+        if (preg_match('/instance\/([\w-]+)/', $_SERVER['REQUEST_URI'], $matches)) {
+            return $matches[1];
+        }
+        
+        if (isset($_GET['instance']) && preg_match('/^[\w-]+$/', $_GET['instance'])) {
+            return $_GET['instance'];
+        }
+        
+        return NULL;
+    }
+
+
+    /**
+     * Returns the path of the config file.
+     * 
+     * If a certain instance is requested, the corresponding config file path is returned. Otherwise,
+     * the standard config file path is returned.
+     * 
+     * @return string
+     */
+    protected function _getConfigFilePath ()
+    {
+        $instanceName = $this->_getInstanceName();
+        if (NULL !== $instanceName) {
+            $instanceFile = ACLOGIN_CONFIG_DIR . 'instances.php';
+            if (file_exists($instanceFile) && ($instances = require $instanceFile)) {
+                if (! isset($instances[$instanceName])) {
+                    $this->_die(sprintf("Unknown instance '%s'", $instanceName));
+                }
+                
+                $instanceConfig = $instances[$instanceName];
+                if (! isset($instanceConfig['config_file'])) {
+                    $this->_die(sprintf("Instance '%s' without config file", $instanceName));
+                }
+                
+                $instanceConfigFile = ACLOGIN_CONFIG_DIR . $instanceConfig['config_file'];
+                
+                if (! file_exists($instanceConfigFile)) {
+                    $this->_die(sprintf("Non-existent config file '%s' for instance '%s'", $instanceConfigFile, $instanceName));
+                }
+                
+                if (! is_readable($instanceConfigFile)) {
+                    $this->_die(sprintf("Non-readable config file '%s' for instance '%s'", $instanceConfigFile, $instanceName));
+                }
+                
+                return $instanceConfigFile;
+            }
+        }
+        
+        return ACLOGIN_CONFIG_DIR . $this->_configFileName;
+    }
+
+
+    /**
+     * Handles non-recoverable error.
+     * 
+     * @param string $message
+     */
+    protected function _die ($message = '')
+    {
+        if ($message) {
+            error_log($message);
+        }
+        
+        header("HTTP/1.0 404 Not Found");
+        exit();
     }
 }

@@ -23,12 +23,6 @@
 
 require_once '../init.php';
 
-
-function _log ($value)
-{
-    error_log(print_r($value, true));
-}
-
 $app = new AcLogin_Application(array(
     'config_file' => ACLOGIN_CONFIG_DIR . 'aclogin.ini'
 ));

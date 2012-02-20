@@ -49,3 +49,9 @@ require_once 'Zend/Loader/Autoloader.php';
 $autoloader = Zend_Loader_Autoloader::getInstance();
 $autoloader->registerNamespace('AcLogin_');
 $autoloader->registerNamespace('AcApi_');
+
+//-----------------
+function _log ($value)
+{
+    error_log(print_r($value, true));
+}
