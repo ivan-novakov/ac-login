@@ -1,0 +1,11 @@
+RewriteEngine on
+
+RewriteBase /devel/aclogin-new
+
+RewriteCond %{SCRIPT_FILENAME} !-f
+RewriteCond %{SCRIPT_FILENAME} !-d
+RewriteCond %{SCRIPT_FILENAME} !css$
+RewriteCond %{SCRIPT_FILENAME} !js$
+RewriteCond %{SCRIPT_FILENAME} !jpg$
+RewriteCond %{SCRIPT_FILENAME} !html$
+RewriteRule ^(.*)$ index.php/$1
