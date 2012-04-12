@@ -1,3 +1,8 @@
+v0.4.0 (2012-04-12)
+
+  - support for multiple Adobe Connect instances
+  
+
 v0.3.0 (2011-06-02)
 
   - option to use one time passwords when logging to Adobe Connect server

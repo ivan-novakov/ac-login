@@ -1,6 +1,4 @@
 <?php
-
-
 /**
  * This file is part of the AC Login Service.    
  *
@@ -17,8 +15,8 @@
  * You should have received a copy of the GNU Lesser General Public License    
  * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>. 
  * 
- * @author Ivan Novakov <ivan.novakov@debug.cz>
- * @copyright Copyright (c) 2009-2011 CESNET, z. s. p. o. (http://www.ces.net/)
+ * @author Ivan Novakov <ivan.novakov@cesnet.cz>
+ * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
  * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
  * 
  */
@@ -76,24 +74,13 @@ class AcLogin_Application extends AcLogin_Base
 
 
     /**
-     * Destructor.
-     *
-     */
-    /*
-    public function __destruct ()
-    {
-        $this->_log->debug("Shutting down...");
-    }
-    */
-    
-    /**
      * Debugging shorthand.
      *
      * @param mixed $value
      */
     private function _debug ($value)
     {
-        error_log(print_r($value, 1));
+        error_log(print_r($value, true));
     }
 
 
@@ -110,7 +97,7 @@ class AcLogin_Application extends AcLogin_Base
             if ($this->_log instanceof Zend_Log) {
                 $this->_log->crit(sprintf("main() %s: %s", get_class($e), $e->getMessage()));
             } else {
-                error_log("$e");
+                $this->_debug("$e");
             }
         }
     }
@@ -238,7 +225,6 @@ class AcLogin_Application extends AcLogin_Base
         
         $data = $resp->getRawData();
         
-        //if (! isset($data->{'principal-list'}->principal) && ! isset($data->principal[0]->login)) {
         if (! $data->{'principal-list'}->principal['principal-id']) {
             $this->_log->notice(sprintf("[%s]] User account does not exist on the server", $uid));
             return 0;
@@ -257,7 +243,6 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param AcLogin_RemoteUser $remoteUser
      * @return integer
-     * 
      */
     protected function _principalCreate (AcLogin_RemoteUser $remoteUser)
     {
@@ -445,8 +430,6 @@ class AcLogin_Application extends AcLogin_Base
     protected function _initConfig ()
     {
         $configFile = $this->_getConfigFilePath();
-        //_log('CONFIG: ' . $configFile);
-        //$configFile = $this->getOption('config_file');
         if (! $configFile) {
             throw new AcLogin_Exception('No config file specified');
         }
@@ -513,8 +496,8 @@ class AcLogin_Application extends AcLogin_Base
     protected function _actionDebugPage (Array $params = array())
     {
         $this->_log->info(print_r($_SERVER, true));
-        _log($_SERVER);
-        _log($params);
+        $this->_debug($_SERVER);
+        $this->_debug($params);
         
         $this->_actionGeneralError('Debug mode');
     }
@@ -527,7 +510,6 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected function _actionInvalidUser (AcLogin_RemoteUser $remoteUser)
     {
-        //$this->_log->err('Invalid remote user');
         $this->_actionGeneralError('Invalid remote user (no uid set)');
     }
 
@@ -542,7 +524,6 @@ class AcLogin_Application extends AcLogin_Base
     {
         $error = $resp->getError();
         $errorMessage = sprintf("%s :: %s", $action, $error->getMessage());
-        //_log($resp);
         $this->_actionGeneralError($errorMessage);
     }
 
@@ -562,9 +543,7 @@ class AcLogin_Application extends AcLogin_Base
         ));
         
         $view->headTitle('Error');
-        //$view->headLink()->appendStylesheet('aclogin.css');
         
-
         $this->_renderView($view);
         exit();
     }
@@ -683,6 +662,9 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected function _getConfigFilePath ()
     {
+        /*
+         * First, check if a special instance is required and if instances are configured.
+         */
         $instanceName = $this->_getInstanceName();
         if (NULL !== $instanceName) {
             $instanceFile = ACLOGIN_CONFIG_DIR . 'instances.php';
@@ -710,6 +692,16 @@ class AcLogin_Application extends AcLogin_Base
             }
         }
         
+        /*
+         * Second, check if the 'config_file' options is set
+         */
+        if ($configFile = $this->getOption('config_file')) {
+            return $configFile;
+        }
+        
+        /*
+         * At last, return the default config file path.
+         */
         return ACLOGIN_CONFIG_DIR . $this->_configFileName;
     }
 

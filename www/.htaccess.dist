@@ -1,6 +1,6 @@
 RewriteEngine on
 
-RewriteBase /devel/aclogin-new
+RewriteBase /aclogin
 
 RewriteCond %{SCRIPT_FILENAME} !-f
 RewriteCond %{SCRIPT_FILENAME} !-d

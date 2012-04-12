@@ -1,12 +1,12 @@
 AC Login Service
 
-Author: Ivan Novakov <ivan.novakov@debug.cz>
-Copyright: (c) 2009 CESNET, z. s. p. o. (http://www.ces.net/)
+Author: Ivan Novakov <ivan.novakov@cesnet.cz>
+Copyright: (c) 2012 CESNET, z. s. p. o. (http://www.ces.net/)
 Licence: LGPL (http://www.gnu.org/licenses/lgpl.txt)
 
 Requirements:
-  - AC PHP API v0.1
+  - AC PHP API v0.1 (see install instructions bellow)
   - Zend Framework 1.5+, http://framework.zend.com/
   
-Some details:
-  - https://vidcon.cesnet.cz/videokonference/doc/howto/adobe_connect_en/index
+Install instructions:
+  - https://homeproj.cesnet.cz/projects/aclogin/wiki/Install_en
