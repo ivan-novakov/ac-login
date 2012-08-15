@@ -135,6 +135,19 @@ class AcLogin_Application extends AcLogin_Base
         
         $this->_log->notice(sprintf("Remote user: '%s' (%s), IdP: %s", $uid, $remoteUser->getRawUid(), $_SERVER['Shib-Identity-Provider']));
         
+        // PEP
+        $acl = $this->_getAcl();
+        if (! $acl->isAllowed($remoteUser)) {
+            $rule = $acl->getFailedRule();
+            if (! $rule) {
+                $this->_log->err('ACL failed, but no failed rule available');
+                $this->_actionGeneralError('access denied');
+            }
+            
+            $this->_log->err(sprintf("ACL rule failed: [%s] '%s'", get_class($rule), $rule->getLabel()));
+            $this->_actionGeneralError(sprintf($rule->getDenyMessage()));
+        }
+        
         // Initialize AC API client object
         $this->_initClient();
         
@@ -186,19 +199,6 @@ class AcLogin_Application extends AcLogin_Base
         }
         
         $this->_log->notice(sprintf("[%s] User logged in to Adobe Connect server", $uid));
-        
-        // PEP
-        $acl = $this->_getAcl();
-        if (! $acl->isAllowed($remoteUser)) {
-            $rule = $acl->getFailedRule();
-            if (! $rule) {
-                $this->_log->err('ACL failed, but no failed rule available');
-                $this->_actionGeneralError('access denied');
-            }
-            
-            $this->_log->err(sprintf("ACL rule failed: [%s] '%s'", get_class($rule), $rule->getLabel()));
-            $this->_actionGeneralError(sprintf($rule->getDenyMessage()));
-        }
         
         // Retrieve the session string from the response
         $sessionString = $resp->getSessionString();
