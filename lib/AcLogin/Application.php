@@ -1,4 +1,6 @@
 <?php
+
+
 /**
  * This file is part of the AC Login Service.    
  *
@@ -48,6 +50,13 @@ class AcLogin_Application extends AcLogin_Base
      * @var AcApi_Client
      */
     protected $_client = NULL;
+
+    /**
+     * THe ACL object.
+     * 
+     * @var AcLogin_Acl
+     */
+    protected $_acl = NULL;
 
     /**
      * A custom password salt to use when generating user passwords, if one time passwords are enabled.
@@ -177,6 +186,19 @@ class AcLogin_Application extends AcLogin_Base
         }
         
         $this->_log->notice(sprintf("[%s] User logged in to Adobe Connect server", $uid));
+        
+        // PEP
+        $acl = $this->_getAcl();
+        if (! $acl->isAllowed($remoteUser)) {
+            $rule = $acl->getFailedRule();
+            if (! $rule) {
+                $this->_log->err('ACL failed, but no failed rule available');
+                $this->_actionGeneralError('access denied');
+            }
+            
+            $this->_log->err(sprintf("ACL rule failed: [%s] '%s'", get_class($rule), $rule->getLabel()));
+            $this->_actionGeneralError(sprintf($rule->getDenyMessage()));
+        }
         
         // Retrieve the session string from the response
         $sessionString = $resp->getSessionString();
@@ -371,7 +393,6 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected function _principalUpdatePassword (AcLogin_RemoteUser $remoteUser, $principalId, $newPassword = NULL)
     {
-        
         $uid = $remoteUser->getUid();
         
         $this->_log->info(sprintf("[%s] Updating user password", $uid));
@@ -487,18 +508,35 @@ class AcLogin_Application extends AcLogin_Base
         
         return $layout;
     }
+
+
+    /**
+     * Returns the ACL object.
+     * 
+     * @return AcLogin_Acl
+     */
+    protected function _getAcl ()
+    {
+        $aclFile = ACLOGIN_CONFIG_DIR . $this->_config->acl->acl_definition_file;
+        
+        if (! ($this->_acl instanceof AcLogin_Acl)) {
+            $this->_acl = new AcLogin_Acl(new Zend_Config(require $aclFile));
+        }
+        
+        return $this->_acl;
+    }
     
     /*
      * Miscelaneous actions/error handling.
      *
      */
-    
     protected function _actionDebugPage (Array $params = array())
     {
         $this->_log->info(print_r($_SERVER, true));
-        $this->_debug($_SERVER);
-        $this->_debug($params);
+        //$this->_debug($_SERVER);
+        //$this->_debug($params);
         
+
         $this->_actionGeneralError('Debug mode');
     }
 
@@ -639,7 +677,6 @@ class AcLogin_Application extends AcLogin_Base
      */
     protected function _getInstanceName ()
     {
-        
         if (preg_match('/instance\/([\w-]+)/', $_SERVER['REQUEST_URI'], $matches)) {
             return $matches[1];
         }

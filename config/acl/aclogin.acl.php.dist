@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * This file is part of the AC Login Service.
+ *
+ * The AC Login Service is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The AC Login Service is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Ivan Novakov <ivan.novakov@cesnet.cz>
+ * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
+ * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
+ *
+ */
+
+/**
+ * ACL configuration.
+ */
+return array(
+    
+    /*
+     * Options
+     */
+    'options' => array(
+        'ruleClassPrefix' => 'AcLogin_Acl_Rule_'
+    ), 
+    
+    /*
+     * Rules
+     */
+    'rules' => array(
+    
+        /*
+         * Users with attribute "foo" having value of "bar" are allowed. If the attribute is missing, the rule is ignored.
+         */
+        'fooRule' => array(
+            'rule' => 'UserAttrExprRule', 
+            'params' => array(
+                'type' => AcLogin_Acl_Rule_UserAttrExprRule::TYPE_PERMIT, 
+                'attributeName' => 'foo', 
+                'attributeMatchValue' => 'bar', 
+                'operator' => AcLogin_Acl_Rule_UserAttrExprRule::OP_EQUAL,
+                'ignoreMissingAttribute' => true,
+                'denyMessage' => 'invalid_foo_value'
+            )
+        )
+    )
+);

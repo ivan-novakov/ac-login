@@ -1,2 +1,4 @@
 
+- use more "tree-friendly" configuration format instead of INI - PHP array, YAML, JSON, ...
+- re-write shibboleth authentication with https://github.com/ivan-novakov/zf-shib-auth
 - support for various authentication backends

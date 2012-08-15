@@ -1,4 +1,6 @@
 <?php
+
+
 /**
  * This file is part of the AC Login Service.    
  *
@@ -27,20 +29,21 @@
  */
 class AcLogin_RemoteUser extends AcLogin_Base
 {
+
     /**
      * The unique ID of the user determined for the AC server.
      *
      * @var string
      */
     protected $_uid = '';
-    
+
     /**
      * The REMOTE_USER variable value.
      *
      * @var string
      */
     protected $_rawUid = '';
-    
+
     /**
      * User attributes container.
      *
@@ -54,14 +57,15 @@ class AcLogin_RemoteUser extends AcLogin_Base
      * @var array
      */
     protected $_attrMapConfig = array(
-    	'uid_field' => 'uid',
-    	'givenName_field' => 'first_name',
-    	'sn_field' => 'surname',
-    	'mail_field' => 'email'
+        'uid_field' => 'uid', 
+        'givenName_field' => 'first_name', 
+        'sn_field' => 'surname', 
+        'mail_field' => 'email'
     );
+
     protected $_attrMap;
 
-    
+
     /**
      * Constructor.
      *
@@ -74,9 +78,9 @@ class AcLogin_RemoteUser extends AcLogin_Base
         $this->_initAttrMap();
         $this->_loadUserInfo();
     }
-    
-    
-    protected function _initAttrMap()
+
+
+    protected function _initAttrMap ()
     {
         foreach ($this->_attrMapConfig as $fieldConfig => $attrName) {
             $fieldName = $this->getOption($fieldConfig);
@@ -94,7 +98,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
     protected function _loadUserInfo ()
     {
         $this->_uid = $this->_extractUid();
-        if (!$this->_uid) {
+        if (! $this->_uid) {
             return;
         }
         
@@ -104,21 +108,21 @@ class AcLogin_RemoteUser extends AcLogin_Base
             }
         }
     }
-    
-    
+
+
     /**
      * Determine the unique user ID for the AC server.
      *
      * @return string
      */
-    protected function _extractUid()
+    protected function _extractUid ()
     {
         // if the preferred 'uid_field' variable is set, return it without modification
         $uidField = $this->getOption('uid_field');
         if ($uidField && isset($_SERVER[$uidField])) {
             return $_SERVER[$uidField];
         }
-      
+        
         // when using the universal REMOTE_USER variable, we should do some modifications
         // to ensure, that the format of the UID will be the same for all possible formats
         // (eppn, computed-id, stored-id, ...)
@@ -133,8 +137,8 @@ class AcLogin_RemoteUser extends AcLogin_Base
         
         return NULL;
     }
-    
-    
+
+
     /**
      * Parse attribute value - handle mutivalue attributes.
      * Currently it returns only the first attribute.
@@ -142,11 +146,11 @@ class AcLogin_RemoteUser extends AcLogin_Base
      * @param string $value
      * @return string
      */
-    protected function _parseAttrValue($value)
+    protected function _parseAttrValue ($value)
     {
-    	$parts = explode(';', $value);
-    	// FIXME - returns only the first attribute value
-    	return $parts[0];
+        $parts = explode(';', $value);
+        // FIXME - returns only the first attribute value
+        return $parts[0];
     }
 
 
@@ -170,14 +174,14 @@ class AcLogin_RemoteUser extends AcLogin_Base
     {
         return $this->_uid;
     }
-    
-    
+
+
     /**
      * Returns the 'raw' REMOTE_USER value.
      *
      * @return string
      */
-    public function getRawUid()
+    public function getRawUid ()
     {
         return $this->_rawUid;
     }
@@ -220,59 +224,75 @@ class AcLogin_RemoteUser extends AcLogin_Base
         
         return NULL;
     }
-    
-    
+
+
+    /**
+     * Returns a raw (environment) attribute.
+     * 
+     * @param string $attrName
+     * @return string|NULL
+     */
+    public function getRawAttribute ($attrName)
+    {
+        if (isset($_SERVER[$attrName])) {
+            return $_SERVER[$attrName];
+        }
+        
+        return NULL;
+    }
+
+
     /**
      * Returns an array of the 'required' attributes, the ones defined in the mapping property (_attrMap)
      *
      * @return array
      */
-    public function getRequiredAttributes()
+    public function getRequiredAttributes ()
     {
         return array_keys($this->_attrMap);
     }
 
-    
+
     /**
      * Returns user's email.
      *
      * @return string
      */
-    public function getEmail()
+    public function getEmail ()
     {
-    	return $this->getAttribute('email');
+        return $this->getAttribute('email');
     }
-    
-    
+
+
     /**
      * Returns user's first name.
      *
      * @return string
      */
-    public function getFirstName()
+    public function getFirstName ()
     {
-    	return $this->getAttribute('first_name');
+        return $this->getAttribute('first_name');
     }
-    
-    
+
+
     /**
      * Returns user's surname.
      *
      * @return string
      */
-    public function getSurname()
+    public function getSurname ()
     {
-    	return $this->getAttribute('surname');
+        return $this->getAttribute('surname');
     }
-    
-    
+
+
     /**
      * Returns user's full name (first name and surname)
      *
      * @return string
      */
-    public function getFullName()
+    public function getFullName ()
     {
-    	return sprintf("%s %s", $this->getFirstName(), $this->getSurname());
+        return sprintf("%s %s", $this->getFirstName(), $this->getSurname());
     }
 }

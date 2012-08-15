@@ -32,6 +32,10 @@ template = default
 ; The entityID of the Shibboleth SP
 entity_id = https://ac.server.cz/sp/shibboleth
 
+; When true, the user is not redirected to AC server, instead an info page is displayed.
+debug_mode = true
+
+
 ; Adobe Connect accounts related options
 [account]
 
@@ -106,3 +110,8 @@ password = acpasswd
 
 ; Cookie name, containing the session
 cookie = BREEZESESSION
+
+
+; ACL - experimental
+[acl]
+acl_definition_file = acl/aclogin.acl.php
