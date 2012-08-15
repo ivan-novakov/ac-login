@@ -234,7 +234,6 @@ class AcLogin_RemoteUser extends AcLogin_Base
      */
     public function getRawAttribute ($attrName)
     {
-        return 1;
         if (isset($_SERVER[$attrName])) {
             return $_SERVER[$attrName];
         }
