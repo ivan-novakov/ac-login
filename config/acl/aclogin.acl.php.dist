@@ -31,6 +31,7 @@ return array(
      * Options
      */
     'options' => array(
+        'enabled' => true, 
         'ruleClassPrefix' => 'AcLogin_Acl_Rule_'
     ), 
     
@@ -45,6 +46,7 @@ return array(
         'fooRule' => array(
             'rule' => 'UserAttrExprRule', 
             'params' => array(
+                'enabled' => true, 
                 'type' => AcLogin_Acl_Rule_UserAttrExprRule::TYPE_PERMIT, 
                 'attributeName' => 'foo', 
                 'attributeMatchValue' => 'bar', 

@@ -56,7 +56,7 @@ class AcLogin_Acl_Rule_UserAttrExprRule extends AcLogin_Acl_Rule_AbstractRule
         $operator = $this->_getOperator();
         
         $userAttributeValue = $user->getRawAttribute($attributeName);
-        
+ 
         if (NULL === $userAttributeValue && $this->_getParam('ignoreMissingAttribute')) {
             return true;
         }
@@ -68,6 +68,12 @@ class AcLogin_Acl_Rule_UserAttrExprRule extends AcLogin_Acl_Rule_AbstractRule
         }
         
         return $this->_evaluateDenyPermit($match);
+    }
+
+
+    public function __toString ()
+    {
+        return sprintf("%s: %s [%s %s %s]", get_class($this), $this->getLabel(), $this->_getAttributeName(), $this->_getOperator(), $this->_getMatchValue());
     }
 
 

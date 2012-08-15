@@ -144,7 +144,7 @@ class AcLogin_Application extends AcLogin_Base
                 $this->_actionGeneralError('access denied');
             }
             
-            $this->_log->err(sprintf("ACL rule failed: [%s] '%s'", get_class($rule), $rule->getLabel()));
+            $this->_log->err(sprintf("ACL rule failed: %s", $rule));
             $this->_actionGeneralError(sprintf($rule->getDenyMessage()));
         }
         
@@ -518,6 +518,9 @@ class AcLogin_Application extends AcLogin_Base
     protected function _getAcl ()
     {
         $aclFile = ACLOGIN_CONFIG_DIR . $this->_config->acl->acl_definition_file;
+        if (! file_exists($aclFile) || ! is_file($aclFile) || ! is_readable($aclFile)) {
+            throw new AcLogin_Exception(sprintf("ACL definitions file '%s' not found or invalid", $aclFile));
+        }
         
         if (! ($this->_acl instanceof AcLogin_Acl)) {
             $this->_acl = new AcLogin_Acl(new Zend_Config(require $aclFile));

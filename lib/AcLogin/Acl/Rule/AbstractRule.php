@@ -1,4 +1,6 @@
 <?php
+
+
 /**
  * This file is part of the AC Login Service.
  *
@@ -86,6 +88,30 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
     public function getDenyMessage ()
     {
         return $this->_getParam('denyMessage', 'action_denied');
+    }
+
+
+    /**
+     * (non-PHPdoc) 
+     * @see AcLogin_Acl_Rule_RuleInterface::isEnabled()
+     */
+    public function isEnabled ()
+    {
+        if ($this->_getParam('enabled')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+
+    /**
+     * (non-PHPdoc)
+     * @see AcLogin_Acl_Rule_RuleInterface::__toString()
+     */
+    public function __toString ()
+    {
+        return $this->getLabel();
     }
 
 

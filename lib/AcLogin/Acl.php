@@ -72,10 +72,14 @@ class AcLogin_Acl
      */
     public function isAllowed (AcLogin_RemoteUser $user, Array $context = array())
     {
+        if (! $this->isAclEnabled()) {
+            return true;
+        }
+        
         $rules = $this->_initRules($this->_config->rules->toArray());
         
         foreach ($rules as $ruleLabel => $rule) {
-            if (! $rule->evaluate($user, $context)) {
+            if ($rule->isEnabled() && ! $rule->evaluate($user, $context)) {
                 $this->_failedRule = $rule;
                 return false;
             }
@@ -93,6 +97,21 @@ class AcLogin_Acl
     public function getFailedRule ()
     {
         return $this->_failedRule;
+    }
+
+
+    /**
+     * Returns true, if the ACL is active.
+     * 
+     * @return boolean
+     */
+    public function isAclEnabled ()
+    {
+        if ($this->_config->options->enabled) {
+            return true;
+        }
+        
+        return false;
     }
 
 
