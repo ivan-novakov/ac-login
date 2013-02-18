@@ -18,7 +18,7 @@
  * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>. 
  * 
  * @author Ivan Novakov <ivan.novakov@cesnet.cz>
- * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
+ * @copyright Copyright (c) 2009-2013 CESNET, z. s. p. o. (http://www.ces.net/)
  * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
  * 
  */
@@ -33,16 +33,23 @@ class AcLogin_RemoteUser extends AcLogin_Base
     /**
      * The unique ID of the user determined for the AC server.
      *
-     * @var string
+     * @var string|NULL
      */
-    protected $_uid = '';
+    protected $_uid = NULL;
 
     /**
      * The REMOTE_USER variable value.
      *
-     * @var string
+     * @var string|NULL
      */
-    protected $_rawUid = '';
+    protected $_rawUid = NULL;
+
+    /**
+     * Values from the server environment ($_SERVER)
+     * 
+     * @var array
+     */
+    protected $_serverVars = array();
 
     /**
      * User attributes container.
@@ -71,16 +78,22 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @param array $options
      */
-    public function __construct (Array $options)
+    public function __construct(Array $options, Array $serverVars = NULL)
     {
         $this->setOptions($options);
+        
+        if (NULL === $serverVars) {
+            $serverVars = $_SERVER;
+        }
+        $this->_serverVars = $serverVars;
+        
         $this->_attrs = new ArrayObject();
         $this->_initAttrMap();
         $this->_loadUserInfo();
     }
 
 
-    protected function _initAttrMap ()
+    protected function _initAttrMap()
     {
         foreach ($this->_attrMapConfig as $fieldConfig => $attrName) {
             $fieldName = $this->getOption($fieldConfig);
@@ -92,10 +105,9 @@ class AcLogin_RemoteUser extends AcLogin_Base
 
 
     /**
-     * Loads remote user data (from the $_SERVER environment)
-     *
+     * Loads remote user data (from the server environment)
      */
-    protected function _loadUserInfo ()
+    protected function _loadUserInfo()
     {
         $this->_uid = $this->_extractUid();
         if (! $this->_uid) {
@@ -103,8 +115,9 @@ class AcLogin_RemoteUser extends AcLogin_Base
         }
         
         foreach ($this->_attrMap as $fieldName => $attrName) {
-            if (isset($_SERVER[$fieldName])) {
-                $this->setAttribute($attrName, $this->_parseAttrValue($_SERVER[$fieldName]));
+            $attrValue = $this->getServerVar($fieldName);
+            if (NULL !== $attrValue) {
+                $this->setAttribute($attrName, $this->_parseAttrValue($attrValue));
             }
         }
     }
@@ -115,24 +128,27 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    protected function _extractUid ()
+    protected function _extractUid()
     {
         // if the preferred 'uid_field' variable is set, return it without modification
         $uidField = $this->getOption('uid_field');
-        if ($uidField && isset($_SERVER[$uidField])) {
-            return $_SERVER[$uidField];
+        if ($uidField && (NULL !== ($uidValue = $this->getServerVar($uidField)))) {
+            return $uidValue;
         }
         
         // when using the universal REMOTE_USER variable, we should do some modifications
         // to ensure, that the format of the UID will be the same for all possible formats
         // (eppn, computed-id, stored-id, ...)
         $remoteUserField = $this->getOption('remote_user_field');
-        if (isset($_SERVER[$remoteUserField])) {
-            $parts = parse_url($_SERVER['Shib-Identity-Provider']);
+        $remoteUserFieldValue = $this->getServerVar($remoteUserField);
+        if (NULL !== $remoteUserFieldValue) {
+            $parts = parse_url($this->getServerVar('Shib-Identity-Provider'));
             
-            $this->_rawUid = $_SERVER[$remoteUserField];
-            $uid = sprintf("%s@%s", md5($_SERVER[$remoteUserField]), $parts['host']);
-            return $uid;
+            if (isset($parts['host'])) {
+                $this->_rawUid = $remoteUserFieldValue;
+                $uid = sprintf("%s@%s", md5($remoteUserFieldValue), $parts['host']);
+                return $uid;
+            }
         }
         
         return NULL;
@@ -146,7 +162,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      * @param string $value
      * @return string
      */
-    protected function _parseAttrValue ($value)
+    protected function _parseAttrValue($value)
     {
         $parts = explode(';', $value);
         // FIXME - returns only the first attribute value
@@ -157,11 +173,21 @@ class AcLogin_RemoteUser extends AcLogin_Base
     /**
      * Returns if the user is valid (i.e. the user ID has been set)
      *
-     * @return integer
+     * @return boolean
      */
-    public function isValid ()
+    public function isValid()
     {
-        return $this->getUid();
+        if (NULL === $this->getUid()) {
+            return false;
+        }
+        
+        /*
+        if (! $this->validateAttributes()) {
+            return false;
+        }
+        */
+        
+        return true;
     }
 
 
@@ -170,7 +196,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getUid ()
+    public function getUid()
     {
         return $this->_uid;
     }
@@ -181,7 +207,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getRawUid ()
+    public function getRawUid()
     {
         return $this->_rawUid;
     }
@@ -192,7 +218,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return ArrayObject
      */
-    public function getAttributes ()
+    public function getAttributes()
     {
         return $this->_attrs;
     }
@@ -204,7 +230,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      * @param string $attrName
      * @param string $attrValue
      */
-    public function setAttribute ($attrName, $attrValue)
+    public function setAttribute($attrName, $attrValue)
     {
         $this->_attrs->offsetSet($attrName, $attrValue);
     }
@@ -216,7 +242,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      * @param string $attrName
      * @return string
      */
-    public function getAttribute ($attrName)
+    public function getAttribute($attrName)
     {
         if ($this->_attrs->offsetExists($attrName)) {
             return $this->_attrs->offsetGet($attrName);
@@ -227,18 +253,51 @@ class AcLogin_RemoteUser extends AcLogin_Base
 
 
     /**
+     * Returns true, if the attribute is set.
+     * 
+     * @param string $attrName
+     * @return boolean
+     */
+    public function isSetAttribute($attrName)
+    {
+        return (NULL !== $this->getAttribute($attrName));
+    }
+
+
+    /**
+     * Validates the user attributes.
+     * 
+     * @throws AcLogin_Exception
+     */
+    public function validateAttributes()
+    {
+        $requiredAttrs = $this->getOption('required_attributes');
+        $missingAttrs = array();
+        
+        if (NULL !== $requiredAttrs) {
+            $attrNames = preg_split('/\s+/', $requiredAttrs);
+            foreach ($attrNames as $attrName) {
+                if (NULL === $this->getServerVar($attrName)) {
+                    $missingAttrs[] = $attrName;
+                }
+            }
+        }
+        
+        if (! empty($missingAttrs)) {
+            throw new AcLogin_Exception(sprintf("Missing user attributes: %s", implode(', ', $missingAttrs)));
+        }
+    }
+
+
+    /**
      * Returns a raw (environment) attribute.
      * 
      * @param string $attrName
      * @return string|NULL
      */
-    public function getRawAttribute ($attrName)
+    public function getRawAttribute($varName)
     {
-        if (isset($_SERVER[$attrName])) {
-            return $_SERVER[$attrName];
-        }
-        
-        return NULL;
+        return $this->getServerVar($varName);
     }
 
 
@@ -247,7 +306,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return array
      */
-    public function getRequiredAttributes ()
+    public function getRequiredAttributes()
     {
         return array_keys($this->_attrMap);
     }
@@ -258,7 +317,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getEmail ()
+    public function getEmail()
     {
         return $this->getAttribute('email');
     }
@@ -269,7 +328,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getFirstName ()
+    public function getFirstName()
     {
         return $this->getAttribute('first_name');
     }
@@ -280,7 +339,7 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getSurname ()
+    public function getSurname()
     {
         return $this->getAttribute('surname');
     }
@@ -291,8 +350,24 @@ class AcLogin_RemoteUser extends AcLogin_Base
      *
      * @return string
      */
-    public function getFullName ()
+    public function getFullName()
     {
         return sprintf("%s %s", $this->getFirstName(), $this->getSurname());
+    }
+
+
+    /**
+     * Returns a server variable value.
+     * 
+     * @param string $varName
+     * @return string|NULL
+     */
+    public function getServerVar($varName)
+    {
+        if (isset($this->_serverVars[$varName])) {
+            return $this->_serverVars[$varName];
+        }
+        
+        return NULL;
     }
 }

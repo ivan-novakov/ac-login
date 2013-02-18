@@ -18,7 +18,7 @@
  * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>. 
  * 
  * @author Ivan Novakov <ivan.novakov@cesnet.cz>
- * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
+ * @copyright Copyright (c) 2009-2013 CESNET, z. s. p. o. (http://www.ces.net/)
  * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
  * 
  */
@@ -76,7 +76,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param array $options
      */
-    public function __construct (Array $options)
+    public function __construct(Array $options)
     {
         $this->setOptions($options);
     }
@@ -87,7 +87,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param mixed $value
      */
-    private function _debug ($value)
+    private function _debug($value)
     {
         error_log(print_r($value, true));
     }
@@ -97,7 +97,7 @@ class AcLogin_Application extends AcLogin_Base
      * The "main()" method, which si run at the highest level.
      *
      */
-    public function main ()
+    public function main()
     {
         try {
             $this->_run();
@@ -116,7 +116,7 @@ class AcLogin_Application extends AcLogin_Base
      * Main routine.
      *
      */
-    protected function _run ()
+    protected function _run()
     {
         // initialize config object
         $this->_initConfig();
@@ -126,7 +126,8 @@ class AcLogin_Application extends AcLogin_Base
         $this->_log->debug('Log started...');
         
         // Initialize remote user object based on received remote user info (Shibboleth)
-        $remoteUser = new AcLogin_RemoteUser($this->_config->shibboleth->toArray());
+        $serverVars = $_SERVER;
+        $remoteUser = new AcLogin_RemoteUser($this->_config->shibboleth->toArray(), $serverVars);
         if (! $remoteUser->isValid()) {
             $this->_actionInvalidUser($remoteUser);
         }
@@ -232,7 +233,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param AcLogin_RemoteUser $remoteUser
      * @return integer
      */
-    protected function _principalExists (AcLogin_RemoteUser $remoteUser)
+    protected function _principalExists(AcLogin_RemoteUser $remoteUser)
     {
         $uid = $remoteUser->getUid();
         
@@ -266,7 +267,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param AcLogin_RemoteUser $remoteUser
      * @return integer
      */
-    protected function _principalCreate (AcLogin_RemoteUser $remoteUser)
+    protected function _principalCreate(AcLogin_RemoteUser $remoteUser)
     {
         $uid = $remoteUser->getUid();
         $this->_log->info(sprintf("[%s] Creating new account", $uid));
@@ -276,9 +277,21 @@ class AcLogin_Application extends AcLogin_Base
         $email = $remoteUser->getEmail();
         $password = $this->_getPrincipalPassword($remoteUser);
         
+        if (! $uid) {
+            $this->_actionGeneralError('No user ID found in request');
+        }
+        
+        try {
+            $remoteUser->validateAttributes();
+        } catch (Exception $e) {
+            $this->_actionGeneralError(sprintf("[%s] Unable to create user: %s", $uid, $e->getMessage()));
+        }
+        
+        /*
         if (! $uid || ! $firstName || ! $surname || ! $email) {
             $this->_actionGeneralError(sprintf("[%s] Insufficient data for user creation. Required attributes - %s (eppn='%s', givenName='%s', sn='%s', mail='%s')<br />" . "Ask your IdP administrator to allow these attributes for release to SP with entityID='%s'.", $uid, implode(', ', $remoteUser->getRequiredAttributes()), $uid, $firstName, $surname, $email, $this->_config->general->get('entity_id')));
         }
+        */
         
         $resp = $this->_client->api_principalUpdate(array(
             'login' => $uid, 
@@ -343,7 +356,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param AcLogin_RemoteUser $remoteUser
      * @param integer $principalId
      */
-    protected function _principalUpdate (AcLogin_RemoteUser $remoteUser, $principalId)
+    protected function _principalUpdate(AcLogin_RemoteUser $remoteUser, $principalId)
     {
         $uid = $remoteUser->getUid();
         
@@ -391,7 +404,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param integer $principalId
      * @param string $newPassword
      */
-    protected function _principalUpdatePassword (AcLogin_RemoteUser $remoteUser, $principalId, $newPassword = NULL)
+    protected function _principalUpdatePassword(AcLogin_RemoteUser $remoteUser, $principalId, $newPassword = NULL)
     {
         $uid = $remoteUser->getUid();
         
@@ -420,7 +433,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param string $sessionString
      */
-    protected function _redirectUser ($sessionString)
+    protected function _redirectUser($sessionString)
     {
         if (isset($_GET['target']) && parse_url($_GET['target'])) {
             $redirectUri = $_GET['target'];
@@ -448,7 +461,7 @@ class AcLogin_Application extends AcLogin_Base
      * Initializes the config object.
      *
      */
-    protected function _initConfig ()
+    protected function _initConfig()
     {
         $configFile = $this->_getConfigFilePath();
         if (! $configFile) {
@@ -463,7 +476,7 @@ class AcLogin_Application extends AcLogin_Base
      * Initializes the log object
      *
      */
-    protected function _initLog ()
+    protected function _initLog()
     {
         $logConfig = $this->_config->log;
         if (! $logConfig->file) {
@@ -488,7 +501,7 @@ class AcLogin_Application extends AcLogin_Base
      * Initializes the AC API client object.
      *
      */
-    protected function _initClient ()
+    protected function _initClient()
     {
         $acConfig = $this->_config->acapi->toArray();
         $this->_client = new AcApi_Client($acConfig);
@@ -501,7 +514,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @return Zend_Layout
      */
-    protected function _initLayout ()
+    protected function _initLayout()
     {
         $layout = new Zend_Layout();
         $layout->setLayoutPath($this->_getLayoutPath());
@@ -515,7 +528,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @return AcLogin_Acl
      */
-    protected function _getAcl ()
+    protected function _getAcl()
     {
         $aclFile = ACLOGIN_CONFIG_DIR . $this->_config->acl->acl_definition_file;
         if (! file_exists($aclFile) || ! is_file($aclFile) || ! is_readable($aclFile)) {
@@ -533,14 +546,10 @@ class AcLogin_Application extends AcLogin_Base
      * Miscelaneous actions/error handling.
      *
      */
-    protected function _actionDebugPage (Array $params = array())
+    protected function _actionDebugPage(Array $params = array())
     {
         $this->_log->info(print_r($_SERVER, true));
-        //$this->_debug($_SERVER);
-        //$this->_debug($params);
-        
-
-        $this->_actionGeneralError('Debug mode');
+        $this->_actionGeneralError('Debug mode: ' . print_r($params, true));
     }
 
 
@@ -549,7 +558,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param AcLogin_RemoteUser $remoteUser
      */
-    protected function _actionInvalidUser (AcLogin_RemoteUser $remoteUser)
+    protected function _actionInvalidUser(AcLogin_RemoteUser $remoteUser)
     {
         $this->_actionGeneralError('Invalid remote user (no uid set)');
     }
@@ -561,7 +570,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param string $action The remote method name which returned an error.
      * @param AcApi_Response $resp
      */
-    protected function _actionAcError ($action, AcApi_Response $resp)
+    protected function _actionAcError($action, AcApi_Response $resp)
     {
         $error = $resp->getError();
         $errorMessage = sprintf("%s :: %s", $action, $error->getMessage());
@@ -574,7 +583,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param unknown_type $message
      */
-    protected function _actionGeneralError ($message)
+    protected function _actionGeneralError($message)
     {
         $this->_log->err($message);
         
@@ -595,7 +604,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @param Zend_View_Interface $view
      */
-    protected function _renderView (Zend_View_Interface $view)
+    protected function _renderView(Zend_View_Interface $view)
     {
         $layout = $this->_initLayout();
         $layout->setView($view);
@@ -608,7 +617,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @return boolean
      */
-    protected function _isDebugMode ()
+    protected function _isDebugMode()
     {
         return $this->_config->general->get('debug_mode', false);
     }
@@ -620,7 +629,7 @@ class AcLogin_Application extends AcLogin_Base
      * @param AcLogin_RemoteUser $remoteUser
      * @return string
      */
-    protected function _getPrincipalPassword (AcLogin_RemoteUser $remoteUser)
+    protected function _getPrincipalPassword(AcLogin_RemoteUser $remoteUser)
     {
         $uid = $remoteUser->getUid();
         $salt = $this->_getPasswordSalt();
@@ -641,7 +650,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @return string
      */
-    protected function _getPasswordSalt ()
+    protected function _getPasswordSalt()
     {
         if (NULL !== $this->_passwordSalt) {
             return $this->_passwordSalt;
@@ -656,7 +665,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @param string $salt
      */
-    protected function _setPasswordSalt ($salt)
+    protected function _setPasswordSalt($salt)
     {
         $this->_passwordSalt = $salt;
     }
@@ -667,7 +676,7 @@ class AcLogin_Application extends AcLogin_Base
      *
      * @return string
      */
-    protected function _getLayoutPath ()
+    protected function _getLayoutPath()
     {
         return ACLOGIN_TPL_DIR . $this->_config->general->get('template', 'default') . DIRECTORY_SEPARATOR . 'layouts';
     }
@@ -678,7 +687,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @return string
      */
-    protected function _getInstanceName ()
+    protected function _getInstanceName()
     {
         if (preg_match('/instance\/([\w-]+)/', $_SERVER['REQUEST_URI'], $matches)) {
             return $matches[1];
@@ -700,7 +709,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @return string
      */
-    protected function _getConfigFilePath ()
+    protected function _getConfigFilePath()
     {
         /*
          * First, check if a special instance is required and if instances are configured.
@@ -751,7 +760,7 @@ class AcLogin_Application extends AcLogin_Base
      * 
      * @param string $message
      */
-    protected function _die ($message = '')
+    protected function _die($message = '')
     {
         if ($message) {
             error_log($message);

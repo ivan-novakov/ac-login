@@ -15,7 +15,7 @@
 ; * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>. 
 ; * 
 ; * @author Ivan Novakov <ivan.novakov@cesnet.cz>
-; * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
+; * @copyright Copyright (c) 2009-2013 CESNET, z. s. p. o. (http://www.ces.net/)
 ; * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
 ; * 
 ; */
@@ -81,6 +81,8 @@ givenName_field = givenName
 ; surname
 sn_field = sn
 
+; required attributes - space delimited attributes names - if set, the presence of these attributes is being validated
+;required_attributes = eppn mail givenName sn
 
 ; Logging options
 [log]
