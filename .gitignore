@@ -1,7 +1,8 @@
-.gitignore
+.buildpath
+composer.lock
 config/aclogin.ini
 config/connect.ini
 config/instances.php
 config/acl/aclogin.acl.php
-www/.htaccess
-tmp
+public/.htaccess
+vendor/

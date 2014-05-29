@@ -1,0 +1,17 @@
+{
+    "name" : "ivan-novakov/ac-login",
+    "description" : "External Shibboleth authentication for Adobe Connect",
+    "license" : "LGPL",
+
+    "require" : {
+        "php" : ">=5.3.3",
+        "zendframework/zendframework1" : "~1.12",
+        "ivan-novakov/ac-client-lib" : "dev-devel"
+    },
+
+    "autoload" : {
+        "psr-0" : {
+            "AcLogin_" : "src/"
+        }
+    }
+}
