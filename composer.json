@@ -6,7 +6,7 @@
     "require" : {
         "php" : ">=5.3.3",
         "zendframework/zendframework1" : "~1.12",
-        "ivan-novakov/ac-client-lib" : "dev-devel"
+        "ivan-novakov/ac-client-lib" : "~0.2"
     },
 
     "autoload" : {
