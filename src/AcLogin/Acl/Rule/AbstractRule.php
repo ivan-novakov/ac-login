@@ -2,28 +2,6 @@
 
 
 /**
- * This file is part of the AC Login Service.
- *
- * The AC Login Service is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The AC Login Service is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Ivan Novakov <ivan.novakov@cesnet.cz>
- * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
- * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
- *
- */
-
-/**
  * Abstract ACL rule class.
  *
  */
@@ -62,7 +40,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * @param string $label
      * @param array $params
      */
-    public function __construct ($label, Array $params = array())
+    public function __construct($label, Array $params = array())
     {
         $this->_label = $label;
         $this->_params = $params;
@@ -74,7 +52,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * 
      * @return string
      */
-    public function getLabel ()
+    public function getLabel()
     {
         return $this->_label;
     }
@@ -85,7 +63,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * 
      * @return string
      */
-    public function getDenyMessage ()
+    public function getDenyMessage()
     {
         return $this->_getParam('denyMessage', 'action_denied');
     }
@@ -95,7 +73,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * (non-PHPdoc) 
      * @see AcLogin_Acl_Rule_RuleInterface::isEnabled()
      */
-    public function isEnabled ()
+    public function isEnabled()
     {
         if ($this->_getParam('enabled')) {
             return true;
@@ -109,7 +87,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * (non-PHPdoc)
      * @see AcLogin_Acl_Rule_RuleInterface::__toString()
      */
-    public function __toString ()
+    public function __toString()
     {
         return $this->getLabel();
     }
@@ -121,7 +99,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * @param boolean $evaluation
      * @return boolean
      */
-    protected function _evaluateDenyPermit ($evaluation)
+    protected function _evaluateDenyPermit($evaluation)
     {
         switch ($this->_getType()) {
             case self::TYPE_PERMIT:
@@ -149,7 +127,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * 
      * @return string
      */
-    protected function _getType ()
+    protected function _getType()
     {
         return $this->_getParam('type', self::TYPE_DENY);
     }
@@ -163,7 +141,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * @throws AcLogin_Acl_Rule_Exception_MissingParamException
      * @return mixed
      */
-    protected function _getParam ($name, $defaultValue = NULL)
+    protected function _getParam($name, $defaultValue = NULL)
     {
         if (isset($this->_params[$name])) {
             return $this->_params[$name];
@@ -183,7 +161,7 @@ abstract class AcLogin_Acl_Rule_AbstractRule implements AcLogin_Acl_Rule_RuleInt
      * @param string $name
      * @return boolean
      */
-    protected function _isRequiredParam ($name)
+    protected function _isRequiredParam($name)
     {
         return (in_array($name, $this->_requiredParams));
     }

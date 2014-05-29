@@ -2,30 +2,7 @@
 
 
 /**
- * This file is part of the AC Login Service.    
- *
- * The AC Login Service is free software: you can redistribute it and/or modify    
- * it under the terms of the GNU Lesser General Public License as published by    
- * the Free Software Foundation, either version 3 of the License, or    
- * (at your option) any later version.    
- * 
- * The AC Login Service is distributed in the hope that it will be useful,    
- * but WITHOUT ANY WARRANTY; without even the implied warranty of    
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    
- * GNU Lesser General Public License for more details.    
- * 
- * You should have received a copy of the GNU Lesser General Public License    
- * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>. 
- * 
- * @author Ivan Novakov <ivan.novakov@cesnet.cz>
- * @copyright Copyright (c) 2009-2013 CESNET, z. s. p. o. (http://www.ces.net/)
- * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
- * 
- */
-
-/**
  * The application class, containing the main() method and the base actions.
- *
  */
 class AcLogin_Application extends AcLogin_Base
 {
@@ -190,7 +167,7 @@ class AcLogin_Application extends AcLogin_Base
         
         // Try to login as the remote user
         $resp = $this->_client->api_login(array(
-            'login' => $uid, 
+            'login' => $uid,
             'password' => $this->_getPrincipalPassword($remoteUser)
         ));
         
@@ -210,7 +187,7 @@ class AcLogin_Application extends AcLogin_Base
         
         if ($this->_isDebugMode()) {
             $this->_actionDebugPage(array(
-                'user' => $remoteUser, 
+                'user' => $remoteUser,
                 'session' => $sessionString
             ));
             return;
@@ -238,7 +215,7 @@ class AcLogin_Application extends AcLogin_Base
         $uid = $remoteUser->getUid();
         
         $resp = $this->_client->api_principalList(array(
-            'filter-type' => 'user', 
+            'filter-type' => 'user',
             'filter-login' => $remoteUser->getUid()
         ));
         
@@ -294,13 +271,13 @@ class AcLogin_Application extends AcLogin_Base
         */
         
         $resp = $this->_client->api_principalUpdate(array(
-            'login' => $uid, 
-            'first-name' => $firstName, 
-            'last-name' => $surname, 
-            'email' => $email, 
-            'has-children' => 0, 
-            'type' => 'user', 
-            'send-email' => 0, 
+            'login' => $uid,
+            'first-name' => $firstName,
+            'last-name' => $surname,
+            'email' => $email,
+            'has-children' => 0,
+            'type' => 'user',
+            'send-email' => 0,
             'password' => $password
         ));
         
@@ -320,7 +297,7 @@ class AcLogin_Application extends AcLogin_Base
         if ($defaultGroup = $this->_config->account->default_group) {
             // First, we should get the ID of the group
             $resp = $this->_client->api_principalList(array(
-                'filter-type' => 'group', 
+                'filter-type' => 'group',
                 'filter-name' => $defaultGroup
             ));
             if ($resp->isError()) {
@@ -332,8 +309,8 @@ class AcLogin_Application extends AcLogin_Base
             // If the group exists on the server, update the user membership
             if ($groupId) {
                 $resp = $this->_client->api_groupMembershipUpdate(array(
-                    'group-id' => $groupId, 
-                    'principal-id' => $principalId, 
+                    'group-id' => $groupId,
+                    'principal-id' => $principalId,
                     'is-member' => true
                 ));
                 if ($resp->isError()) {
@@ -415,8 +392,8 @@ class AcLogin_Application extends AcLogin_Base
         }
         
         $resp = $this->_client->api_userUpdatePwd(array(
-            'user-id' => $principalId, 
-            'password' => $newPassword, 
+            'user-id' => $principalId,
+            'password' => $newPassword,
             'password-verify' => $newPassword
         ));
         

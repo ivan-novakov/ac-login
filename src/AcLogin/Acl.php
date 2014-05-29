@@ -2,28 +2,6 @@
 
 
 /**
- * This file is part of the AC Login Service.
- *
- * The AC Login Service is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The AC Login Service is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with the AC Login Service.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Ivan Novakov <ivan.novakov@cesnet.cz>
- * @copyright Copyright (c) 2009-2012 CESNET, z. s. p. o. (http://www.ces.net/)
- * @license LGPL (http://www.gnu.org/licenses/lgpl.txt)
- *
- */
-
-/**
  * The ACL object, making the ACL decisions based on rules.
  *
  */
@@ -57,7 +35,7 @@ class AcLogin_Acl
      * 
      * @param Zend_Config $config
      */
-    public function __construct (Zend_Config $config)
+    public function __construct(Zend_Config $config)
     {
         $this->_config = $config;
     }
@@ -70,7 +48,7 @@ class AcLogin_Acl
      * @param array $context
      * @return boolean
      */
-    public function isAllowed (AcLogin_RemoteUser $user, Array $context = array())
+    public function isAllowed(AcLogin_RemoteUser $user, Array $context = array())
     {
         if (! $this->isAclEnabled()) {
             return true;
@@ -94,7 +72,7 @@ class AcLogin_Acl
      * 
      * @return AcLogin_Acl_Rule_RuleInterface
      */
-    public function getFailedRule ()
+    public function getFailedRule()
     {
         return $this->_failedRule;
     }
@@ -105,7 +83,7 @@ class AcLogin_Acl
      * 
      * @return boolean
      */
-    public function isAclEnabled ()
+    public function isAclEnabled()
     {
         if ($this->_config->options->enabled) {
             return true;
@@ -121,7 +99,7 @@ class AcLogin_Acl
      * @param array $rulesConfig
      * @return array
      */
-    protected function _initRules (Array $rulesConfig)
+    protected function _initRules(Array $rulesConfig)
     {
         $rules = array();
         foreach ($rulesConfig as $ruleLabel => $ruleData) {
@@ -141,7 +119,7 @@ class AcLogin_Acl
      * @throws AcLogin_Acl_Rule_Exception_UnknownRuleClassException
      * @return AcLogin_Acl_Rule_RuleInterface
      */
-    protected function _initRule ($label, $name, Array $params = array())
+    protected function _initRule($label, $name, Array $params = array())
     {
         $className = $this->_getRuleClassName($name);
         if (! class_exists($className)) {
@@ -158,7 +136,7 @@ class AcLogin_Acl
      * @param string $name
      * @return string
      */
-    protected function _getRuleClassName ($name)
+    protected function _getRuleClassName($name)
     {
         $classPrefix = $this->_defaultClassPrefix;
         if ($this->_config->options->ruleClassPrefix) {
