@@ -162,6 +162,9 @@ class AcLogin_Application extends AcLogin_Base
             $this->_principalUpdatePassword($remoteUser, $principalId);
         }
         
+        // sync group membership
+        $this->_syncUserGroups($remoteUser);
+
         // Logout as administrator (proxy account)
         $resp = $this->_client->logout();
         
@@ -404,6 +407,93 @@ class AcLogin_Application extends AcLogin_Base
         $this->_log->notice(sprintf("[%s] User password updated", $uid));
     }
 
+      /**
+     * Synchronizes a user to affiliation groups on the AC server.
+     *
+     * @param AcLogin_RemoteUser $remoteUser
+     * 
+     */
+    protected function _syncUserGroups (AcLogin_RemoteUser $remoteUser)
+    {
+        $this->_log->info(sprintf("Syncing groups for user '%s'", $remoteUser->getUid()));
+ 
+        $uid = $remoteUser->getUid();
+
+
+        $resp = $this->_client->api_principalList(array(
+            'filter-type' => 'user', 
+            'filter-login' => $uid
+        ));
+        
+        if ($resp->isError()) {
+            $this->_actionAcError('principal-list', $resp);
+        }
+        
+        $xml = $resp->getRawData();
+        $principalId = (string) $xml->{'principal-list'}->principal['principal-id'];
+
+
+        // Create affiliation groups
+        foreach($remoteUser->getAffiliation() as $groupName)
+        {
+            $groupId = null;
+            
+            // First, we should get the ID of the group
+            $resp = $this->_client->api_principalList(array(
+                
+                'filter-type' => 'group', 
+                'filter-name' => $groupName
+            ));
+            if ($resp->isError()) {
+                $this->_actionAcError('principal-list', $resp);
+            }
+            
+            $xml = $resp->getRawData();
+            $groupId = (string) $xml->{'principal-list'}->principal['principal-id'];
+            
+            // If the group doesn't exist on the server, create it
+            if (!$groupId)
+            {
+                // Create affiliation group
+                $resp = $this->_client->api_principalUpdate(array(
+                    'login' => $groupName,
+                    'name' => $groupName, 
+                    'description' => $groupName, 
+                    'has-children' => 1, 
+                    'type' => 'group'
+                ));
+                
+                if ($resp->isError()) {
+                    $this->_actionAcError('principal-update', $resp);
+                }
+                
+                $xml = $resp->getRawData();
+                $groupId = (string) $xml->principal['principal-id'];
+                
+                if (!$groupId) {
+                    $this->_actionGeneralError("Error creating affiliation group");
+                }
+                $this->_log->notice(sprintf("Created group '%s' [%d] at the server", $groupId, $groupId));
+
+            }
+
+            // if we now have a group to work with, add the user
+            if ($groupId) {
+                $resp = $this->_client->api_groupMembershipUpdate(array(
+                    'group-id' => $groupId, 
+                    'principal-id' => $principalId, 
+                    'is-member' => true
+                ));
+                if ($resp->isError()) {
+                    $this->_actionAcError('group-membership-update', $resp);
+                }
+                
+                $this->_log->notice(sprintf("User '%s' [%d] added to group '%s' [%d]", $uid, $principalId, $defaultGroup, $groupId));
+            } else {
+                $this->_log->warn(sprintf("Affiliation group '%s' not found on the server", $defaultGroup));
+            }
+        }
+    }
 
     /**
      * Redirects the user to the AC server attaching the active session string.

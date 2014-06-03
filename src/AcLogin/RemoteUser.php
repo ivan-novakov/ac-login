@@ -45,7 +45,8 @@ class AcLogin_RemoteUser extends AcLogin_Base
         'uid_field' => 'uid',
         'givenName_field' => 'first_name',
         'sn_field' => 'surname',
-        'mail_field' => 'email'
+        'mail_field' => 'email',
+        'affiliation_field' => 'affiliation'
     );
 
     protected $_attrMap;
@@ -143,7 +144,11 @@ class AcLogin_RemoteUser extends AcLogin_Base
     protected function _parseAttrValue($value)
     {
         $parts = explode(';', $value);
-        // FIXME - returns only the first attribute value
+
+        if (count($parts) > 1)
+        {
+            return $parts;
+        }    
         return $parts[0];
     }
 
@@ -333,7 +338,20 @@ class AcLogin_RemoteUser extends AcLogin_Base
         return sprintf("%s %s", $this->getFirstName(), $this->getSurname());
     }
 
-
+    /**
+     * Returns user's affiliation.
+     *
+     * @return array
+     */
+    public function getAffiliation()
+    {
+        $affiliation = $this->getAttribute('affiliation');
+        if(!is_array($affiliation))
+        {
+            $affiliation = array($affiliation);
+        }
+        return $affiliation;
+    }
     /**
      * Returns a server variable value.
      * 

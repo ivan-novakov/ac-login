@@ -60,6 +60,9 @@ givenName_field = givenName
 ; surname
 sn_field = sn
 
+; affiliation
+affiliation_field = affiliation
+
 ; required attributes - space delimited attributes names - if set, the presence of these attributes is being validated
 ;required_attributes = eppn mail givenName sn
 
